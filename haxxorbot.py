@@ -15,7 +15,7 @@ user_patterns = [
 ]
 
 async def get_json(url):
-    headers = {'User-Agent': 'curl/7.68.0'}
+    headers = {'User-Agent': 'curl/8.5.0'}
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url) as resp:
             return await resp.json()
@@ -37,14 +37,14 @@ async def process_line(line, channel):
                 break
 
     if not info:
-        info = await get_json(f"https://ipinfo.io/{ip}")
+        info = await get_json(f"https://ipinfo.io/{ip}/json")
+        country_name = await get_json(f"https://restcountries.com/v3.1/alpha/{info['country']}")
+        info["country_name"] = country_name[0]["name"]["common"]
         with open("cache.txt", "a") as cache:
             cache.write(f"{json.dumps(info)}\n")
         is_new_haxxor = True
-    country_name = await get_json(f"https://restcountries.com/v3.1/alpha/{info['country']}")
-    country_name = country_name[0]["name"]["common"]
 
-    location=f"[{re.sub(r'\b(\w+(?: \w+)*)(?:, \1\b)+',r'\1',f'{info['city']}, {info['region']}, {country_name}')}]"
+    location=f"[{re.sub(r'\b(\w+(?: \w+)*)(?:, \1\b)+',r'\1',f'{info['city']}, {info['region']}, {info['country_name']}')}]"
     map_link = location + f"(https://www.openstreetmap.org/#map=12/{info['loc'].replace(',', '/')})"
     org_link = f"[{' '.join(info['org'].split()[1:])}](https://ipinfo.io/{info['org'].split()[0]})"
 
